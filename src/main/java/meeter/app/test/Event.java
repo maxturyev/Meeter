@@ -1,70 +1,58 @@
 package meeter.app.test;
 
-import java.util.Objects;
-
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 @Entity
-class Event {
+public class Event{
 
-  private @Id
-  @GeneratedValue Long id;
-  private String name;
-  private String category;
+	@Id
+	@GeneratedValue
+	private Long id;
+	
+	@Column(nullable = false)
+	@NotBlank(message = "Name is required")
+    @Size(max = 100, message = "Name must be less than 100 characters")
+	private String name;
 
-  Event() {}
+	@Column(nullable = false)
+	@NotBlank(message = "Category is required")
+	private String category;
 
-  Event(String name, String category) {
+	public Event() {}
 
-    this.name = name;
-    this.category = category;
-  }
+	Event(String name, String category) {
 
-  public Long getId() {
-    return this.id;
-  }
+		this.name = name;
+		this.category = category;
+	}
 
-  public String getName() {
-    return this.name;
-  }
+	public Long getId() {
+		return this.id;
+	}
 
-  public String getCategory() {
-    return this.category;
-  }
+	public String getName() {
+		return this.name;
+	}
 
-  public void setId(Long id) {
-    this.id = id;
-  }
+	public String getCategory() {
+		return this.category;
+	}
 
-  public void setName(String name) {
-    this.name = name;
-  }
+	public void setId(Long id) {
+		this.id = id;
+	}
 
-  public void setCategory(String category) {
-    this.category = category;
-  }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-  @Override
-  public boolean equals(Object o) {
+	public void setCategory(String category) {
+	this.category = category;
+	}
 
-    if (this == o)
-      return true;
-    if (!(o instanceof Event))
-      return false;
-    Event event = (Event) o;
-    return Objects.equals(this.id, event.id) && Objects.equals(this.name, event.name)
-        && Objects.equals(this.category, event.category);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(this.id, this.name, this.category);
-  }
-
-  @Override
-  public String toString() {
-    return "Event{" + "id=" + this.id + ", name='" + this.name + '\'' + ", category='" + this.category + '\'' + '}';
-  }
 }

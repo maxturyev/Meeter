@@ -20,61 +20,59 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 class EventController {
 
-    private final EventRepository repository;
-
+    private final EventDatabase database;
     private final EventModelAssembler assembler;
 
-    EventController(EventRepository repository, EventModelAssembler assembler) {
-        this.repository = repository;
+    EventController(EventDatabase database, EventModelAssembler assembler) {
+        this.database = database;
         this.assembler = assembler;
     }
 
 
-    // Aggregate root
-    // tag::get-aggregate-root[]
+    // Handler #1
     @GetMapping("/events")
     CollectionModel<EntityModel<Event>> all() {
 
-    List<EntityModel<Event>> events = repository.findAll().stream()
+    List<EntityModel<Event>> events = database.listEvents().stream()
       .map(assembler::toModel)
       .collect(Collectors.toList());
 
     return CollectionModel.of(events, linkTo(methodOn(EventController.class).all()).withSelfRel());
     }
-    // end::get-aggregate-root[]
-
+    
+    // Handler #2
     @PostMapping("/events")
     ResponseEntity<?> newEvent(@RequestBody Event newEvent) {
 
-        EntityModel<Event> entityModel = assembler.toModel(repository.save(newEvent));
+        EntityModel<Event> entityModel = assembler.toModel(database.addEvent(newEvent));
 
         return ResponseEntity
             .created(entityModel.getRequiredLink(IanaLinkRelations.SELF).toUri())
             .body(entityModel);
     }
 
-    // Single item
-
+    // Handler #3
     @GetMapping("/events/{id}")
     EntityModel<Event> one(@PathVariable Long id) {
 
-        Event event = repository.findById(id)
+        Event event = database.listSingle(id)
             .orElseThrow(() -> new EventNotFoundException(id));
 
         return assembler.toModel(event);
     }
 
+    // Handler #4
     @PutMapping("/events/{id}")
     ResponseEntity<?> replaceEvent(@RequestBody Event newEvent, @PathVariable Long id) {
 
-        Event updatedEvent = repository.findById(id) //
+        Event updatedEvent = database.listSingle(id) //
         .map(event -> {
             event.setName(newEvent.getName());
             event.setCategory(newEvent.getCategory());
-            return repository.save(event);
+            return database.updateEvent(event);
         })
         .orElseGet(() -> {
-            return repository.save(newEvent);
+            return database.updateEvent(newEvent);
         });
 
         EntityModel<Event> entityModel = assembler.toModel(updatedEvent);
@@ -84,10 +82,11 @@ class EventController {
             .body(entityModel);
     }
 
+    // Handler #5
     @DeleteMapping("/events/{id}")
     ResponseEntity<?> deleteEvent(@PathVariable Long id) {
 
-        repository.deleteById(id);
+        database.deleteEvent(id);
 
         return ResponseEntity.noContent().build();
     }
